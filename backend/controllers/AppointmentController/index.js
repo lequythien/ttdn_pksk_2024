@@ -10,6 +10,7 @@ const moment = require("moment-timezone");
 require("moment/locale/vi");
 const User_role = require("../../models/User_role");
 const Role = require("../../models/Role");
+const Payment = require("../../models/Payment");
 
 const findAllAppointment = async (req, res) => {
   try {
@@ -79,7 +80,7 @@ const updateAppointment = async (req, res) => {
 
     const oldDate = moment(appointment.work_date)
       .tz("Asia/Ho_Chi_Minh")
-      .format("dddd, MMMM DD YYYY");
+      .format("dddd, DD MMMM YYYY");
 
     const oldShift = appointment.work_shift === "morning" ? "Sáng" : "Chiều";
 
@@ -128,7 +129,7 @@ const updateAppointment = async (req, res) => {
     await Notification.create({
       patient_id: appointmentUpdate.patient_id,
       doctor_id: appointmentUpdate.doctor_id,
-      content: `Thông báo lịch hẹn ${oldDate}-${oldShift} của bạn đã thay đổi: \nNgày khám mới: ${newDate}. \n Ca khám mới: ${newShift}.\n Thời gian diễn ra: ${time}`,
+      content: `Thông báo lịch hẹn ${oldDate}- Ca: ${oldShift} của bạn đã thay đổi: \nNgày khám mới: ${newDate}. \n Ca khám mới: ${newShift}.\n Thời gian diễn ra: ${time}`,
       appointment_id: appointmentUpdate._id,
       recipientType: "patient",
     });
@@ -189,6 +190,130 @@ const formatVietnameseDate = (date) => {
   return formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 };
 
+// const patientCreateAppointment = async (req, res) => {
+//   try {
+//     const user_id = req.params.id;
+
+//     // Lấy thông tin bệnh nhân
+//     const patient = await Patient.findOne({ user_id: user_id });
+//     if (!patient) {
+//       return res.status(400).json({ message: "Patient not found" });
+//     }
+
+//     // Kiểm tra bác sĩ có tồn tại hay không
+//     const checkDoctor = await Doctor.findOne({ _id: req.body.doctor_id });
+//     if (!checkDoctor) {
+//       return res.status(400).json({ message: "Bác sĩ không tồn tại!" });
+//     }
+
+//     // Kiểm tra xem lịch hẹn đã tồn tại chưa
+//     const checkAppointment = await Appointment.findOne({
+//       patient_id: patient._id,
+//       work_date: req.body.work_date,
+//       work_shift: req.body.work_shift,
+//       status: { $nin: ["canceled"] },
+//     });
+//     if (checkAppointment) {
+//       return res.status(400).json({ message: "Bạn đã đặt lịch hẹn này rồi!" });
+//     }
+
+//     // Kiểm tra nếu đã hủy 2 lần trước đó
+//     const canceledCount = await Appointment.countDocuments({
+//       patient_id: patient._id,
+//       work_date: req.body.work_date,
+//       work_shift: req.body.work_shift,
+//       status: "canceled",
+//     });
+//     if (canceledCount >= 2) {
+//       return res.status(400).json({
+//         message: "Bạn đã hủy lịch hẹn này hai lần, không thể đặt lại!",
+//       });
+//     }
+
+//     // Kiểm tra số lượng lịch hẹn trong ngày
+//     const dailyAppointments = await Appointment.countDocuments({
+//       patient_id: patient._id,
+//       work_date: req.body.work_date,
+//       status: { $nin: ["canceled"] },
+//     });
+
+//     if (dailyAppointments >= 4) {
+//       return res.status(400).json({
+//         message: "Bạn chỉ có thể đặt tối đa 4 lịch hẹn trong một ngày!",
+//       });
+//     }
+
+//     // Xác định thời gian buổi sáng và buổi chiều
+//     const appointmentDate = new Date(req.body.work_date);
+
+//     const morningTime = new Date(appointmentDate);
+//     morningTime.setUTCHours(7, 30, 0, 0); // 7h30 sáng (UTC)
+
+//     const afternoonTime = new Date(appointmentDate);
+//     afternoonTime.setUTCHours(13, 30, 0, 0); // 1h30 chiều (UTC)
+
+//     // Thời gian hiện tại (UTC)
+//     const currentTime = new Date();
+
+//     // Kiểm tra nếu là buổi sáng
+//     if (appointmentDate >= morningTime && appointmentDate < afternoonTime) {
+//       // Loại bỏ điều kiện kiểm tra 30 phút
+//       if (currentTime > morningTime) {
+//         return res.status(400).json({
+//           message:
+//             "Bạn chỉ có thể đặt lịch hẹn cho buổi sáng trước giờ diễn ra!",
+//         });
+//       }
+//     }
+
+//     // Kiểm tra nếu là buổi chiều
+//     if (appointmentDate >= afternoonTime) {
+//       // Loại bỏ điều kiện kiểm tra 30 phút
+//       if (currentTime > afternoonTime) {
+//         return res.status(400).json({
+//           message:
+//             "Bạn chỉ có thể đặt lịch hẹn cho buổi chiều trước giờ diễn ra!",
+//         });
+//       }
+//     }
+
+//     // Tạo lịch hẹn
+//     const appointment = await Appointment.create({
+//       ...req.body,
+//       patient_id: patient._id,
+//     });
+
+//     // Lưu vào lịch sử hẹn
+//     await Appointment_history.create({
+//       appointment_id: appointment._id,
+//       patient_id: patient._id,
+//       doctor_id: appointment.doctor_id,
+//     });
+
+//     const formattedDate = formatVietnameseDate(appointment.work_date);
+
+//     // Tạo thông báo
+//     await Notification.create({
+//       patient_id: appointment.patient_id,
+//       doctor_id: appointment.doctor_id,
+//       content: `Bạn đã đặt lịch hẹn vào ngày: ${formattedDate}, hãy chờ phản hồi từ bác sĩ.`,
+//       appointment_id: appointment._id,
+//       recipientType: "patient",
+//     });
+
+//     await Notification.create({
+//       patient_id: appointment.patient_id,
+//       doctor_id: appointment.doctor_id,
+//       content: `Bạn có lịch hẹn đang chờ xác nhận vào ngày: ${formattedDate}.`,
+//       appointment_id: appointment._id,
+//       recipientType: "doctor",
+//     });
+
+//     return res.status(200).json(appointment);
+//   } catch (error) {
+//     return res.status(500).json({ message: error.message });
+//   }
+// };
 const patientCreateAppointment = async (req, res) => {
   try {
     const user_id = req.params.id;
@@ -216,7 +341,7 @@ const patientCreateAppointment = async (req, res) => {
       return res.status(400).json({ message: "Bạn đã đặt lịch hẹn này rồi!" });
     }
 
-    // // Kiểm tra nếu đã hủy 2 lần trước đó
+    // Kiểm tra nếu đã hủy 2 lần trước đó
     const canceledCount = await Appointment.countDocuments({
       patient_id: patient._id,
       work_date: req.body.work_date,
@@ -244,34 +369,27 @@ const patientCreateAppointment = async (req, res) => {
 
     // Xác định thời gian buổi sáng và buổi chiều
     const appointmentDate = new Date(req.body.work_date);
-
-    const morningTime = new Date(appointmentDate);
-    morningTime.setUTCHours(7, 30, 0, 0); // 7h30 sáng (UTC)
-
-    const afternoonTime = new Date(appointmentDate);
-    afternoonTime.setUTCHours(13, 30, 0, 0); // 1h30 chiều (UTC)
-
+    
     // Thời gian hiện tại (UTC)
     const currentTime = new Date();
 
-    // Kiểm tra nếu là buổi sáng
-    if (appointmentDate >= morningTime && appointmentDate < afternoonTime) {
-      // Loại bỏ điều kiện kiểm tra 30 phút
-      if (currentTime > morningTime) {
+    // Kiểm tra ca làm việc
+    if (req.body.work_shift === "morning") {
+      const morningDeadline = new Date(appointmentDate);
+      morningDeadline.setUTCHours(7, 30, 0, 0); // 7h30 sáng (UTC)
+
+      if (currentTime > morningDeadline) {
         return res.status(400).json({
-          message:
-            "Bạn chỉ có thể đặt lịch hẹn cho buổi sáng trước giờ diễn ra!",
+          message: "Bạn chỉ có thể đặt lịch hẹn cho buổi sáng trước 7h30!",
         });
       }
-    }
+    } else if (req.body.work_shift === "afternoon") {
+      const afternoonDeadline = new Date(appointmentDate);
+      afternoonDeadline.setUTCHours(13, 30, 0, 0); // 1h30 chiều (UTC)
 
-    // Kiểm tra nếu là buổi chiều
-    if (appointmentDate >= afternoonTime) {
-      // Loại bỏ điều kiện kiểm tra 30 phút
-      if (currentTime > afternoonTime) {
+      if (currentTime > afternoonDeadline) {
         return res.status(400).json({
-          message:
-            "Bạn chỉ có thể đặt lịch hẹn cho buổi chiều trước giờ diễn ra!",
+          message: "Bạn chỉ có thể đặt lịch hẹn cho buổi chiều trước 13h30!",
         });
       }
     }
@@ -458,8 +576,6 @@ const processPrematureCancellation = async (req, res) => {
       appointment_id: appointmentUd._id,
       recipientType: "doctor",
     });
-
-    console.log("log email doctor", infoDoctor.email);
 
     const mailOptionsDoctor = {
       from: process.env.EMAIL_USER,
@@ -707,6 +823,7 @@ const deleteAppointmentByStatus = async (req, res) => {
     }
     await Appointment.findByIdAndDelete(id);
     await Appointment_history.deleteMany({ appointment_id: id });
+    await Payment.deleteMany({ appointment_id: id });
     return res
       .status(200)
       .json({ success: true, message: "Delete appointment success!" });
@@ -797,7 +914,7 @@ const adminUpdateAppointment = async (req, res) => {
     if (checkAppointmentPatient) {
       return res
         .status(400)
-        .json({ message: "Appointment for the patient already exists" });
+        .json({ message: "Bệnh nhân đã tồn tại lịch hẹn này rồi!" });
     }
 
     const oldDate = moment(appointment.work_date)
@@ -841,7 +958,7 @@ const adminUpdateAppointment = async (req, res) => {
 
     const newDate = moment(appointmentUpdate.work_date)
       .tz("Asia/Ho_Chi_Minh")
-      .format("dddd, MMMM DD YYYY");
+      .format("dddd, DD MMMM YYYY");
 
     const newShift =
       appointmentUpdate.work_shift === "morning" ? "Sáng" : "Chiều";
@@ -851,7 +968,7 @@ const adminUpdateAppointment = async (req, res) => {
     await Notification.create({
       patient_id: appointmentUpdate.patient_id,
       doctor_id: appointmentUpdate.doctor_id,
-      content: `Thông báo lịch hẹn ${oldDate}-${oldShift} của bạn đã thay đổi: \nNgày khám mới: ${newDate}. \n Ca khám mới: ${newShift}.\n Thời gian diễn ra: ${time}`,
+      content: `Thông báo lịch hẹn ${oldDate}- Ca: ${oldShift} của bạn đã thay đổi: \nNgày khám mới: ${newDate}. \n Ca khám mới: ${newShift}.\n Thời gian diễn ra: ${time}`,
       appointment_id: appointmentUpdate._id,
       recipientType: "patient",
     });

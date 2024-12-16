@@ -13,7 +13,6 @@ const VITE_BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 const Appointment = () => {
   const { docId } = useParams();
   const { user } = useContext(AppContext);
-  console.log("user", user);
   const navigate = useNavigate();
 
   const phone = localStorage.getItem("user")
@@ -27,8 +26,10 @@ const Appointment = () => {
   const [loading, setLoading] = useState(true);
   const [errorLoadingSchedule, setErrorLoadingSchedule] = useState(false);
   const [isBookingDisabled, setIsBookingDisabled] = useState(false);
+  const [isLoadingBooking, setIsLoadingBooking] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
+  // Fetch doctor information
   const fetchDocInfo = async () => {
     try {
       const response = await axios.get(`${VITE_BACKEND_URI}/doctor/find/${docId}`);
@@ -39,10 +40,7 @@ const Appointment = () => {
     }
   };
 
-  useEffect(() => {
-    setSlotTime(""); // Reset lại slotTime khi ngày được chọn thay đổi
-  }, [selectedDate]);
-
+  // Fetch doctor's schedule
   const fetchDoctorSchedule = async () => {
     try {
       const response = await axios.get(`${VITE_BACKEND_URI}/get-schedule-doctor/${docId}`);
@@ -74,8 +72,11 @@ const Appointment = () => {
     setSlotTime("");
   }, [docId]);
 
+  // Handle booking appointment
   const handleBooking = () => {
     setIsBookingDisabled(true);
+    setIsLoadingBooking(true);
+
     const loggedInUser = user || JSON.parse(localStorage.getItem("user"));
     if (!loggedInUser) {
       toast.warn("Vui lòng đăng nhập để đặt lịch hẹn.", {
@@ -85,6 +86,7 @@ const Appointment = () => {
         },
         autoClose: 3000,
       });
+      setIsLoadingBooking(false);
       return;
     }
 
@@ -108,7 +110,7 @@ const Appointment = () => {
             </button>
             <button
               onClick={() => {
-                resetBookingState();
+                resetBookingState(); // Reset state when canceling
                 toast.dismiss();
               }}
               className="bg-gray-300 text-black px-4 py-2 rounded transition duration-300 hover:bg-gray-400"
@@ -124,6 +126,7 @@ const Appointment = () => {
           draggable: false,
         }
       );
+      setIsLoadingBooking(false);
       return;
     }
 
@@ -131,6 +134,7 @@ const Appointment = () => {
       toast.warn("Vui lòng chọn ngày và ca làm việc.", {
         onClose: () => resetBookingState(),
       });
+      setIsLoadingBooking(false);
       return;
     }
 
@@ -152,7 +156,7 @@ const Appointment = () => {
           <button
             onClick={() => {
               confirmBooking();
-              setIsBookingDisabled(false);
+              setIsLoadingBooking(false);
               toast.dismiss();
             }}
             className="bg-green-500 text-white px-4 py-2 rounded transition duration-300 hover:bg-green-600"
@@ -161,7 +165,8 @@ const Appointment = () => {
           </button>
           <button
             onClick={() => {
-              setIsBookingDisabled(false);
+              resetBookingState(); // Reset state when canceling confirmation
+              setIsLoadingBooking(false);
               toast.dismiss();
             }}
             className="bg-gray-300 text-black px-4 py-2 rounded transition duration-300 hover:bg-gray-400"
@@ -175,7 +180,7 @@ const Appointment = () => {
         autoClose: 5000,
         closeOnClick: false,
         draggable: false,
-        onClose: () => setIsBookingDisabled(false),
+        onClose: () => setIsLoadingBooking(false),
       }
     );
   };
@@ -186,6 +191,7 @@ const Appointment = () => {
     setIsBookingDisabled(false);
   };
 
+  // Confirm the booking
   const confirmBooking = async () => {
     try {
       const patientId = user?.id || JSON.parse(localStorage.getItem("user"))?.id;
@@ -195,27 +201,27 @@ const Appointment = () => {
         resetBookingState();
         return;
       }
-  
+
       const selectedSchedule = doctorSchedule[selectedDate]?.find(
         (schedule) =>
           (schedule.work_shift === "morning" && slotTime === "Buổi sáng") ||
           (schedule.work_shift === "afternoon" && slotTime === "Buổi chiều")
       );
-  
+
       if (!selectedSchedule) {
         console.error("Không tìm thấy ca làm việc đã chọn.");
         toast.error("Không tìm thấy lịch hẹn cho ngày và giờ đã chọn.");
         resetBookingState();
         return;
       }
-  
+
       const appointmentData = {
         patient_id: patientId,
         doctor_id: docId,
         work_shift: selectedSchedule.work_shift,
         work_date: selectedSchedule.work_date,
       };
-  
+
       const token = user?.token || "";
       await axios.post(
         `${VITE_BACKEND_URI}/create-appointment/${patientId}`,
@@ -227,16 +233,18 @@ const Appointment = () => {
           },
         }
       );
-  
+
       toast.success("Đặt lịch hẹn thành công!");
       resetBookingState();
     } catch (error) {
       console.error("Error creating appointment:", error);
       toast.error(error.response?.data?.message || "Lỗi không xác định.");
       resetBookingState();
+    } finally {
+      setIsLoadingBooking(false);
     }
   };
-  
+
   if (loading) {
     return (
       <div className="text-center text-2xl mt-10 text-gray-500">
@@ -310,7 +318,7 @@ const Appointment = () => {
             <p className="flex items-center gap-1 text-sm font-medium text-gray-900" style={{ lineHeight: "2.5" }}>
               Giới thiệu <img src={assets.info_icon} alt="Info" />
             </p>
-            {renderDescription()} {/* Gọi hàm hiển thị mô tả */}
+            {renderDescription()}
           </div>
         </div>
       </div>
@@ -319,7 +327,7 @@ const Appointment = () => {
       <div className="sm:ml-72 sm:pl-4 mt-4 font-medium text-gray-700">
         <p className="flex justify-between items-center">
           Đặt khám nhanh:
-          {Object.keys(doctorSchedule).length > 8 && ( // Kiểm tra số lượng lịch
+          {Object.keys(doctorSchedule).length > 8 && (
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
@@ -363,7 +371,11 @@ const Appointment = () => {
                       }
                     m-3 p-4`}
                     style={{ borderRadius: "50%" }}
-                    onClick={() => setSelectedDate(dateStr)}
+                    onClick={() => {
+                      setSelectedDate(dateStr);
+                      setSlotTime(""); // Reset slot time
+                      setIsBookingDisabled(false); // Reset booking disabled state
+                    }}
                   >
                     <p className={`text-sm font-bold ${isSelected ? "text-white" : "text-gray-600"}`}>
                       {dayOfWeek}
@@ -404,11 +416,21 @@ const Appointment = () => {
         {selectedDate && slotTime && (
           <button
             onClick={handleBooking}
-            disabled={isBookingDisabled}
-            className={`bg-[#00759c] text-white text-sm font-bold px-14 py-3 rounded-full my-6 ml-5 ${isBookingDisabled ? "opacity-50 cursor-not-allowed" : ""
+            disabled={isBookingDisabled || isLoadingBooking}
+            className={`bg-[#00759c] text-white text-sm font-bold px-14 py-3 rounded-full my-6 ml-5 ${isBookingDisabled || isLoadingBooking ? "opacity-50 cursor-not-allowed" : ""
               }`}
           >
-            Đặt lịch hẹn
+            {isLoadingBooking ? (
+              <div className="flex items-center">
+                <svg className="animate-spin h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0116 0 8 8 0 01-16 0z" />
+                </svg>
+                Đang đặt lịch...
+              </div>
+            ) : (
+              "Đặt lịch hẹn"
+            )}
           </button>
         )}
       </div>

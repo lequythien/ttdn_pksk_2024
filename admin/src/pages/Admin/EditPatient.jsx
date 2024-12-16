@@ -49,14 +49,11 @@ const EditPatient = () => {
     setLoading(true); // Bắt đầu trạng thái loading
 
     try {
-      // Tạo đối tượng dữ liệu để gửi
       const data = {
         name,
         phone,
         email,
       };
-
-      console.log("Giá trị gửi lên API:", data);
 
       const response = await axios.put(
         `${backendUrl}/patient/update/${id}`, // Thêm ID vào URL
@@ -70,8 +67,8 @@ const EditPatient = () => {
       );
 
       if (response.data.success) {
-        toast.success("Chỉnh sửa bệnh nhân thành công!");
-        navigate("/patient-list"); // Điều hướng về danh sách bệnh nhân
+        // Điều hướng về danh sách bệnh nhân với thông báo thành công
+        navigate("/patient-list", { state: { successMessage: "Chỉnh sửa bệnh nhân thành công!" } });
       } else {
         toast.error("Chỉnh sửa bệnh nhân thất bại!");
       }
@@ -131,8 +128,7 @@ const EditPatient = () => {
         <div className="flex gap-4 mt-4 justify-start">
           <button
             type="submit"
-            className={`bg-primary px-10 py-3 text-white rounded-full ${loading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+            className={`bg-primary px-10 py-3 text-white rounded-full ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={loading}
           >
             {loading ? (

@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminContext } from "../../context/AdminContext";
 import "../../index.css";
+import { toast } from "react-toastify";
 
 const VITE_BACKEND_URI = import.meta.env.VITE_BACKEND_URI;
 
@@ -55,19 +56,28 @@ const AllAppointments = () => {
               onClick={async () => {
                 setIsDeleting(true); // Bắt đầu quá trình xoá
                 try {
-                  const response = await axios.delete(`${VITE_BACKEND_URI}/appointment/delete/${id}`, {
-                    data: { user_id: patientId },
-                  });
+                  const response = await axios.delete(
+                    `${VITE_BACKEND_URI}/appointment/delete/${id}`,
+                    {
+                      data: { user_id: patientId },
+                    }
+                  );
 
                   if (response.data.success) {
-                    toast.success("Xoá cuộc hẹn thành công!", { position: "top-right" });
+                    toast.success("Xoá cuộc hẹn thành công!", {
+                      position: "top-right",
+                    });
                     getAllAppointments(); // Cập nhật lại danh sách cuộc hẹn
                     closeToast();
                   } else {
-                    toast.error("Xoá cuộc hẹn thất bại!", { position: "top-right" });
+                    toast.error("Xoá cuộc hẹn thất bại!", {
+                      position: "top-right",
+                    });
                   }
                 } catch (error) {
-                  toast.error("Đã xảy ra lỗi khi xoá cuộc hẹn!", { position: "top-right" });
+                  toast.error("Đã xảy ra lỗi khi xoá cuộc hẹn!", {
+                    position: "top-right",
+                  });
                 } finally {
                   setIsDeleting(false); // Kết thúc quá trình xoá
                   closeToast();
@@ -102,10 +112,11 @@ const AllAppointments = () => {
       <button
         key="prev"
         onClick={() => paginate(Math.max(1, currentPage - 1))}
-        className={`py-1 px-3 border rounded ${currentPage === 1
-          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-          : "text-gray-600"
-          }`}
+        className={`py-1 px-3 border rounded ${
+          currentPage === 1
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            : "text-gray-600"
+        }`}
         disabled={currentPage === 1}
       >
         Trước
@@ -116,15 +127,20 @@ const AllAppointments = () => {
       <button
         key={1}
         onClick={() => paginate(1)}
-        className={`py-1 px-3 border rounded ${currentPage === 1 ? "bg-indigo-500 text-white" : "text-gray-600"
-          }`}
+        className={`py-1 px-3 border rounded ${
+          currentPage === 1 ? "bg-indigo-500 text-white" : "text-gray-600"
+        }`}
       >
         1
       </button>
     );
 
     if (currentPage > 2) {
-      paginationItems.push(<span key="start-dots" className="px-2">...</span>);
+      paginationItems.push(
+        <span key="start-dots" className="px-2">
+          ...
+        </span>
+      );
     }
 
     for (
@@ -136,8 +152,9 @@ const AllAppointments = () => {
         <button
           key={i}
           onClick={() => paginate(i)}
-          className={`py-1 px-3 border rounded ${i === currentPage ? "bg-indigo-500 text-white" : "text-gray-600"
-            }`}
+          className={`py-1 px-3 border rounded ${
+            i === currentPage ? "bg-indigo-500 text-white" : "text-gray-600"
+          }`}
         >
           {i}
         </button>
@@ -145,7 +162,11 @@ const AllAppointments = () => {
     }
 
     if (currentPage < totalPages - 1) {
-      paginationItems.push(<span key="end-dots" className="px-2">...</span>);
+      paginationItems.push(
+        <span key="end-dots" className="px-2">
+          ...
+        </span>
+      );
     }
 
     if (totalPages > 1) {
@@ -153,10 +174,11 @@ const AllAppointments = () => {
         <button
           key={totalPages}
           onClick={() => paginate(totalPages)}
-          className={`py-1 px-3 border rounded ${currentPage === totalPages
-            ? "bg-indigo-500 text-white"
-            : "text-gray-600"
-            }`}
+          className={`py-1 px-3 border rounded ${
+            currentPage === totalPages
+              ? "bg-indigo-500 text-white"
+              : "text-gray-600"
+          }`}
         >
           {totalPages}
         </button>
@@ -167,10 +189,11 @@ const AllAppointments = () => {
       <button
         key="next"
         onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
-        className={`py-1 px-3 border rounded ${currentPage === totalPages
-          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-          : "text-gray-600"
-          }`}
+        className={`py-1 px-3 border rounded ${
+          currentPage === totalPages
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            : "text-gray-600"
+        }`}
         disabled={currentPage === totalPages}
       >
         Tiếp
@@ -237,7 +260,11 @@ const AllAppointments = () => {
                 <span className="sm:hidden font-semibold">Ca: </span>
                 <span
                   className={`py-1 px-2 rounded-full text-white text-sm text-center font-semibold
-                  ${item.work_shift === "afternoon" ? "bg-orange-300" : "bg-blue-400"}
+                  ${
+                    item.work_shift === "afternoon"
+                      ? "bg-orange-300"
+                      : "bg-blue-400"
+                  }
                   shadow-lg max-w-[100px] w-full h-[28px]`}
                 >
                   {item.work_shift === "morning" ? "Sáng" : "Chiều"}
@@ -247,30 +274,46 @@ const AllAppointments = () => {
               {/* Appointment Status Button */}
               <div className="flex justify-center items-center">
                 {item.status === "canceled" ? (
-                  <button className="bg-red-500 text-white text-xs font-semibold py-1 px-2 rounded-full shadow-lg transition-all duration-300 w-full w-[140px] h-[28px] text-center">
+                  <button className="bg-red-500 text-white text-xs font-semibold py-1 px-2 rounded-full shadow-lg transition-all duration-300 w-[140px] h-[28px] text-center">
                     Đã hủy
                   </button>
                 ) : item.status === "confirmed" ? (
-                  <button className="bg-green-500 text-white text-xs font-semibold py-1 px-2 rounded-full shadow-lg transition-all duration-300 w-full w-[140px] h-[28px] text-center">
+                  <button className="bg-green-500 text-white text-xs font-semibold py-1 px-2 rounded-full shadow-lg transition-all duration-300 w-[140px] h-[28px] text-center">
                     Đã xác nhận
                   </button>
                 ) : item.status === "pending" ? (
-                  <button className="bg-yellow-500 text-white text-xs font-semibold py-1 px-2 rounded-full shadow-lg transition-all duration-300 w-full w-[140px] h-[28px] text-center">
+                  <button className="bg-yellow-500 text-white text-xs font-semibold py-1 px-2 rounded-full shadow-lg transition-all duration-300 w-[140px] h-[28px] text-center">
                     Chờ xác nhận
                   </button>
-                ) : null}
+                ) : (
+                  <button className="bg-blue-500 text-white text-xs font-semibold py-1 px-2 rounded-full shadow-lg transition-all duration-300 w-[140px] h-[28px] text-center">
+                    Đã hoàn thành
+                  </button>
+                )}
               </div>
 
               {/* Action Buttons */}
               <div className="flex justify-center items-center gap-2">
+                {item.status === "pending" || item.status === "confirmed" ? (
+                  <button
+                    onClick={() => navigate(`/edit-appointment/${item._id}`)}
+                    className="bg-blue-500 text-white py-1 px-3 rounded text-sm"
+                  >
+                    <i className="fa-regular fa-pen-to-square"></i>
+                  </button>
+                ) : (
+                  <button
+                    className="bg-gray-300 text-gray-600 py-1 px-3 rounded text-sm cursor-not-allowed"
+                    disabled
+                  >
+                    <i className="fa-regular fa-pen-to-square"></i>
+                  </button>
+                )}
+
                 <button
-                  onClick={() => navigate(`/edit-appointment/${item._id}`)}
-                  className="bg-blue-500 text-white py-1 px-3 rounded text-sm"
-                >
-                  <i className="fa-regular fa-pen-to-square"></i>
-                </button>
-                <button
-                  onClick={() => handleDeleteAppointment(item._id, item.patientInfo._id)}
+                  onClick={() =>
+                    handleDeleteAppointment(item._id, item.patientInfo._id)
+                  }
                   className="bg-red-500 text-white py-1 px-3 rounded text-sm"
                 >
                   <i className="fa-solid fa-trash"></i>

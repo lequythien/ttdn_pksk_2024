@@ -309,22 +309,6 @@ const DoctorsList = () => {
           Tất cả bác sĩ
         </h1>
         <div className="flex items-center shadow-lg w-full md:w-auto">
-          {/* <select
-            value={selectedSpecialization}
-            onChange={(e) => {
-              setSelectedSpecialization(e.target.value);
-              navigate(
-                `/doctor-list${e.target.value ? `/${convertToSlug(e.target.value)}` : ""
-                }`
-              );
-            }}
-            className="px-5 py-3 rounded-lg bg-white text-gray-800 border border-gray-300 transition-all duration-300 shadow-non focus:outline-none hover:border-blue-400 w-full md:w-auto"
-          >
-            <option value="" className="text-gray-500">Chọn chuyên khoa</option>
-            {Array.isArray(specializations) && specializations.map(spec => (
-              <option key={spec._id} value={spec.name} className="text-gray-700">{spec.name}</option>
-            ))}
-          </select> */}
           <select
             value={selectedSpecialization}
             onChange={(e) => {

@@ -6,6 +6,7 @@ const upload = require("./helpers/multer-config");
 const session = require("express-session");
 const cron = require("node-cron");
 const sendAppointmentReminders = require("./services/index");
+const createWebSocketServer = require('./helpers/websocket-config');
 
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
@@ -21,9 +22,8 @@ const userRouterAppointment = require("./routers/Appointment");
 const userRouterSchedule = require("./routers/Schedule");
 const userRouterHome = require("./routers/Home");
 
-//middleware
+// Middleware
 const cors = require("cors");
-// app.use(cors());
 
 // Middleware
 const app = express();
@@ -46,7 +46,9 @@ app.use((req, res, next) => {
   res.setHeader("Cross-Origin-Embedder-Policy", "same-origin");
   next();
 });
+
 // Cron job
+// cron.schedule("* * * * *", async () => {
 cron.schedule("* 7 * * *", async () => {
   try {
     await sendAppointmentReminders();
@@ -100,12 +102,9 @@ cloudinary.config({
 // Express route for image upload
 app.post("/upload", upload.single("image"), async (req, res) => {
   try {
-    // Upload image to Cloudinary
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: "doctor",
     });
-
-    // Send the Cloudinary URL in the response
     res.json({ imageUrl: result.secure_url });
   } catch (error) {
     console.error(error);
@@ -114,6 +113,9 @@ app.post("/upload", upload.single("image"), async (req, res) => {
 });
 
 // Khởi động server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+// Khởi động WebSocket server
+createWebSocketServer(server);

@@ -123,7 +123,7 @@ const DoctorProfile = () => {
 
   return (
     profileData && (
-      <div className="w-full max-w-4xl mx-auto p-5 bg-gray-50 shadow-md rounded-md mt-8 h-[450px]">
+      <div className={`w-full max-w-4xl mx-auto p-5 bg-gray-50 shadow-md rounded-md mt-8 ${isEdit ? 'h-auto' : 'h-[450px]'} mb-5`}>
         <div className="flex flex-col sm:flex-row gap-5 mb-6">
           {/* Left section: Image, Name, and Specialization */}
           <div className="flex flex-col items-center sm:items-start gap-4 sm:w-1/3">

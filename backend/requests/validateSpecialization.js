@@ -19,7 +19,7 @@ const specializationSchema = Joi.object({
     // Check if `mimetype` exists and is valid
     if (!value || !value.mimetype || !validImageTypes.includes(value.mimetype)) {
       // Use helpers.message to ensure the custom message is always shown
-      return helpers.message('Tệp tải lên phải là một ảnh (JPEG, PNG, GIF).');
+      return helpers.message('Tệp tải lên phải là một ảnh (JPEG, PNG, GIF, SVG).');
     }
     return value;
   }),

@@ -60,21 +60,21 @@
         grid-template-columns: 1fr;
         /* Sử dụng 1 cột cho màn hình nhỏ */
         gap: 10px;
+
         /* Giảm khoảng cách giữa các phần tử */
-    }
+        .text-sm {
+            font-size: 12px;
+            /* Giảm kích thước chữ */
+        }
 
-    .text-sm {
-        font-size: 12px;
-        /* Giảm kích thước chữ */
-    }
+        .py-3 {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
 
-    .py-3 {
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
+        .header {
+            display: none;
+            /* Ẩn tiêu đề bảng trên màn hình nhỏ */
+        }
     }
-
-    .header {
-        display: none; /* Ẩn tiêu đề bảng trên màn hình nhỏ */
-      }
 }
-  

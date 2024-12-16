@@ -276,8 +276,8 @@ const DoctorDashboard = () => {
           </div>
 
           {/* Bảng */}
-          <div className="pt-4">
-            <div className="max-h-80 overflow-y-auto rounded-lg border border-gray-200">
+          <div className="">
+            <div className="max-h-80 overflow-y-auto border border-gray-200">
               <table className="w-full text-sm bg-white">
                 {/* Header */}
                 <thead className="bg-gray-100 sticky top-0">
@@ -344,8 +344,8 @@ const DoctorDashboard = () => {
           </div>
 
           {/* Bảng */}
-          <div className="pt-4">
-            <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
+          <div className="">
+            <div className="max-h-80 overflow-y-auto border border-gray-200">
               <table className="w-full text-sm bg-white">
                 {/* Header */}
                 <thead className="bg-gray-100 sticky top-0 z-10">

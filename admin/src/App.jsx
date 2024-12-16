@@ -13,6 +13,7 @@ import AddSpecialty from './pages/Admin/AddSpecialty';
 import AllAppointments from './pages/Admin/AllAppointments';
 import Dashboard from './pages/Admin/Dashboard';
 import DoctorsList from './pages/Admin/DoctorsList';
+import EditAppointment from './pages/Admin/EditAppointment';
 import EditPatient from './pages/Admin/EditPatient';
 import EditSpecialty from './pages/Admin/EditSpecialty';
 import PatientList from './pages/Admin/PatientList';
@@ -25,7 +26,6 @@ import DoctorDashboard from './pages/Doctor/DoctorDashboard';
 import DoctorProfile from './pages/Doctor/DoctorProfile';
 import DoctorWorkSchedule from './pages/Doctor/DoctorWorkSchedule';
 import EditWorkSchedule from './pages/Doctor/EditWorkSchedule';
-import EditAppointment from './pages/Admin/EditAppointment';
 import Login from './pages/Login';
 
 const App = () => {

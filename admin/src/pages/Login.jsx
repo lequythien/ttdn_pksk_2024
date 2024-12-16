@@ -63,6 +63,7 @@ const Login = () => {
                         className='border border-[#DADADA] rounded w-full p-2 mt-1'
                         type="email"
                         required
+                        disabled={loading} // Khóa ô nhập khi loading
                     />
                 </div>
                 <div className='w-full relative'>
@@ -73,6 +74,7 @@ const Login = () => {
                         className='border border-[#DADADA] rounded w-full p-2 mt-1 pr-10'
                         type={showPassword ? "text" : "password"}
                         required
+                        disabled={loading} // Khóa ô nhập khi loading
                     />
                     {password && (
                         <button

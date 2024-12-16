@@ -1,5 +1,5 @@
 import AOS from 'aos';
-import 'aos/dist/aos.css'; // Import AOS styles
+import 'aos/dist/aos.css';
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -31,7 +31,7 @@ const DoctorCardSkeleton = () => {
 };
 
 const Doctors = () => {
-  const { speciality: initialSpeciality } = useParams(); // Lấy tham số từ URL
+  const { speciality: initialSpeciality } = useParams();
   const [filterDoc, setFilterDoc] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
   const [specializations, setSpecializations] = useState([]);
@@ -40,7 +40,8 @@ const Doctors = () => {
   const [doctorsPerPage] = useState(8);
   const [selectedDate, setSelectedDate] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [speciality, setSpeciality] = useState(initialSpeciality || ""); // Khai báo state cho speciality
+  const [speciality, setSpeciality] = useState(initialSpeciality || "");
+  const [noDoctorsFound, setNoDoctorsFound] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -52,7 +53,6 @@ const Doctors = () => {
     try {
       setIsLoading(true);
       const response = await axios.get(`${VITE_BACKEND_URI}/doctor/find-all`);
-      console.log("Doctors fetched:", response.data.doctors); // Kiểm tra dữ liệu
       setDoctors(response.data.success ? response.data.doctors : []);
     } catch (error) {
       console.error("Error fetching doctors:", error);
@@ -74,20 +74,17 @@ const Doctors = () => {
   };
 
   const applyFilter = () => {
+    const queryParams = new URLSearchParams(location.search);
+    queryParams.delete("page"); // Xóa tham số page khỏi URL
+
     let filtered = doctors;
 
-    console.log("Doctors before filtering:", doctors); // Kiểm tra danh sách bác sĩ trước khi lọc
-
-    // Lọc theo chuyên khoa
     if (speciality) {
       filtered = filtered.filter(
         (doc) => convertToSlug(doc.specialization_id?.name) === speciality
       );
     }
 
-    console.log("Filtered Doctors:", filtered); // Kiểm tra danh sách bác sĩ sau khi lọc
-
-    // Lọc theo ngày làm việc
     if (selectedDate) {
       filtered = filtered.filter((doc) =>
         doc.schedules.some(
@@ -99,6 +96,10 @@ const Doctors = () => {
     }
 
     setFilterDoc(filtered);
+    setNoDoctorsFound(filtered.length === 0 && (speciality || selectedDate));
+
+    // Cập nhật URL với các tham số mới
+    updateURL(queryParams);
   };
 
   useEffect(() => {
@@ -113,14 +114,25 @@ const Doctors = () => {
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     setCurrentPage(Number(queryParams.get("page")) || 1);
-    setSelectedDate(queryParams.get("date") || "");
+    const dateFromQuery = queryParams.get("date");
+    if (dateFromQuery) {
+      const [day, month, year] = dateFromQuery.split('-');
+      setSelectedDate(`${year}-${month}-${day}`);
+    }
 
-    // Lấy chuyên khoa từ URL
     const specializationFromQuery = queryParams.get("specialization");
     if (specializationFromQuery) {
       setSpeciality(specializationFromQuery);
     }
   }, [location]);
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
   const totalDoctors = filterDoc.length;
   const totalPages = Math.ceil(totalDoctors / doctorsPerPage);
@@ -128,141 +140,122 @@ const Doctors = () => {
   const indexOfFirstDoctor = indexOfLastDoctor - doctorsPerPage;
   const currentDoctors = filterDoc.slice(indexOfFirstDoctor, indexOfLastDoctor);
 
+  const updateURL = (newParams) => {
+    const queryParams = new URLSearchParams(newParams);
+    const sortedParams = new URLSearchParams();
+
+    for (const [key, value] of queryParams.entries()) {
+      if (key !== "page") {
+        sortedParams.set(key, value);
+      }
+    }
+
+    // Luôn cập nhật tham số page
+    if (queryParams.get("page") !== null) {
+      sortedParams.set("page", queryParams.get("page"));
+    }
+
+    navigate(`/doctors?${sortedParams.toString()}`, { replace: true });
+  };
+
   const handlePageChange = (page) => {
     setCurrentPage(page);
     const queryParams = new URLSearchParams(location.search);
     queryParams.set("page", page);
-    if (speciality) {
-      queryParams.set("specialization", speciality);
-    }
-    if (selectedDate) {
-      queryParams.set("date", selectedDate);
-    }
-    navigate(`/doctors?${queryParams.toString()}`, { replace: true });
+    updateURL(queryParams);
   };
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
     const queryParams = new URLSearchParams(location.search);
-    queryParams.set("date", date);
-    queryParams.set("page", 1); // Đặt lại trang về 1 khi thay đổi ngày
-    if (speciality) {
-      queryParams.set("specialization", speciality);
+    if (date) {
+      queryParams.set("date", formatDate(date));
+    } else {
+      queryParams.delete("date");
     }
-    navigate(`/doctors?${queryParams.toString()}`, { replace: true });
+    updateURL(queryParams);
   };
 
   const handleSpecializationChange = (slug) => {
     const queryParams = new URLSearchParams(location.search);
-
-    // Kiểm tra xem chuyên khoa đã được chọn hay chưa
     if (speciality === slug) {
-      // Nếu đã chọn, xóa chuyên khoa
       queryParams.delete("specialization");
-      setSpeciality(""); // Cập nhật state
+      setSpeciality("");
     } else {
-      // Nếu chưa chọn, thiết lập chuyên khoa mới
       queryParams.set("specialization", slug);
-      queryParams.set("page", 1); // Đặt lại trang về 1 khi thay đổi chuyên khoa
-      setSpeciality(slug); // Cập nhật state
     }
-
-    navigate(`/doctors?${queryParams.toString()}`, { replace: true });
+    updateURL(queryParams);
   };
 
   const renderPagination = () => {
-    const delta = 1; // Số trang hiển thị trước và sau trang hiện tại
+    const delta = 1;
     const paginationItems = [];
 
-    // Nút "Trang trước"
     paginationItems.push(
       <button
         key="prev"
         onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-        className={`py-1 px-3 border rounded w-[70px] ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "text-gray-600"
-          }`}
+        className={`py-1 px-3 border rounded w-[70px] ${currentPage === 1 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "text-gray-600"}`}
         disabled={currentPage === 1}
       >
         Trước
       </button>
     );
 
-    // Hiển thị trang 1
     paginationItems.push(
       <button
         key={1}
         onClick={() => handlePageChange(1)}
-        className={`py-1 px-3 border rounded ${currentPage === 1 ? "bg-indigo-500 text-white" : "text-gray-600"
-          }`}
+        className={`py-1 px-3 border rounded ${currentPage === 1 ? "bg-indigo-500 text-white" : "text-gray-600"}`}
       >
         1
       </button>
     );
 
-    // Hiển thị dấu ba chấm nếu cần, khi currentPage > 3
     if (currentPage > 2) {
-      paginationItems.push(
-        <span key="start-dots" className="px-2">
-          ...
-        </span>
-      );
+      paginationItems.push(<span key="start-dots" className="px-2">...</span>);
     }
 
-    // Hiển thị các trang xung quanh trang hiện tại
     for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
       paginationItems.push(
         <button
           key={i}
           onClick={() => handlePageChange(i)}
-          className={`py-1 px-3 border rounded ${i === currentPage ? "bg-indigo-500 text-white" : "text-gray-600"
-            }`}
+          className={`py-1 px-3 border rounded ${i === currentPage ? "bg-indigo-500 text-white" : "text-gray-600"}`}
         >
           {i}
         </button>
       );
     }
 
-    // Hiển thị dấu ba chấm nếu cần, khi currentPage < totalPages - 1
     if (currentPage < totalPages - 1) {
-      paginationItems.push(
-        <span key="end-dots" className="px-2">
-          ...
-        </span>
-      );
+      paginationItems.push(<span key="end-dots" className="px-2">...</span>);
     }
 
-    // Hiển thị trang cuối
     if (totalPages > 1) {
       paginationItems.push(
         <button
           key={totalPages}
           onClick={() => handlePageChange(totalPages)}
-          className={`py-1 px-3 border rounded ${currentPage === totalPages ? "bg-indigo-500 text-white" : "text-gray-600"
-            }`}
+          className={`py-1 px-3 border rounded ${currentPage === totalPages ? "bg-indigo-500 text-white" : "text-gray-600"}`}
         >
           {totalPages}
         </button>
       );
     }
 
-    // Nút "Trang tiếp theo"
     paginationItems.push(
       <button
         key="next"
         onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-        className={`py-1 px-3 border rounded w-[70px] ${currentPage === totalPages ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "text-gray-600"
-          }`}
+        className={`py-1 px-3 border rounded w-[70px] ${currentPage === totalPages ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "text-gray-600"}`}
         disabled={currentPage === totalPages}
       >
         Tiếp
       </button>
     );
 
-    return (
-      <div className="flex justify-center items-center mt-6 space-x-2">
-        {paginationItems}
-      </div>
-    );
+    return <div className="flex justify-center items-center mt-6 space-x-2">{paginationItems}</div>;
   };
 
   const formatPrice = (price) => {
@@ -285,25 +278,18 @@ const Doctors = () => {
           <p className="text-gray-600 font-semibold text-[20px]">Các bác sĩ chuyên khoa.</p>
           <div className="flex flex-col sm:flex-row items-start gap-5 mt-5">
             <button
-              className={`py-1 px-3 border rounded text-sm transition-all sm:hidden ${showFilter ? "bg-primary text-white" : ""
-                }`}
+              className={`py-1 px-3 border rounded text-sm transition-all sm:hidden ${showFilter ? "bg-primary text-white" : ""}`}
               onClick={() => setShowFilter((prev) => !prev)}
             >
               Lọc chuyên khoa
             </button>
-            <div
-              className={`flex-col gap-4 text-[18px] text-gray-600 ${showFilter ? "flex" : "hidden sm:flex"
-                }`}
-            >
+            <div className={`flex-col gap-4 text-[18px] text-gray-600 ${showFilter ? "flex" : "hidden sm:flex"}`}>
               <h3 className="sm:hidden">Chuyên khoa:</h3>
               {specializations.map((spec) => (
                 <div
                   key={spec._id}
                   onClick={() => handleSpecializationChange(convertToSlug(spec.name))}
-                  className={`w-[94vw] sm:w-40 pl-3 py-1.5 border border-gray-300 rounded transition-all cursor-pointer ${speciality === convertToSlug(spec.name)
-                    ? "bg-[#e0f4fb] text-[#00759c]"
-                    : ""
-                    }`}
+                  className={`w-[94vw] sm:w-40 pl-3 py-1.5 border border-gray-300 rounded transition-all cursor-pointer ${speciality === convertToSlug(spec.name) ? "bg-[#e0f4fb] text-[#00759c]" : ""}`}
                 >
                   <p className="m-0">{spec.name}</p>
                 </div>
@@ -317,44 +303,46 @@ const Doctors = () => {
               />
             </div>
 
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6" data-aos="fade-up">
-              {currentDoctors.map((item, index) => (
-                <div
-                  onClick={() => navigate(`/appointment/${item._id}`)}
-                  className="border border-blue-200 rounded-xl overflow-hidden cursor-pointer hover:translate-y-[-10px] transition-all duration-500 relative"
-                  key={index}
-                >
-                  <img className="bg-blue-50" src={item.user_id.image} alt="" />
-                  <span className="absolute top-2 left-2 bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-1 rounded-full">
-                    {item.specialization_id
-                      ? item.specialization_id.name
-                      : "Chưa có chuyên khoa"}
-                  </span>
-                  <div className="p-4">
-                    {item.available === true ? (
-                      <div className="flex items-center gap-2 text-sm text-center text-[#00759c]">
-                        <p className="w-2 h-2 bg-[#00759c] rounded-full"></p>
-                        <p>Lịch hẹn</p>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-center text-[#9c0000]">
-                        <p className="w-2 h-2 bg-[#9c0000] rounded-full"></p>
-                        <p>Lịch hẹn</p>
-                      </div>
-                    )}
-
-                    <p className="text-gray-900 text-lg font-medium">
-                      {item.user_id.name}
-                    </p>
-                    <p className="text-gray-900 text-sm truncate">
-                      Giá: {item.price ? formatPrice(item.price) : "0"} VND
-                    </p>
-                    <p className="text-gray-900 text-sm truncate">
-                      {item.description}
-                    </p>
+            <div className="w-full bg-gray p-4 rounded-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6" data-aos="fade-up">
+                {currentDoctors.map((item, index) => (
+                  <div
+                    onClick={() => navigate(`/appointment/${item._id}`)}
+                    className="border border-blue-200 rounded-xl overflow-hidden cursor-pointer hover:translate-y-[-10px] transition-all duration-500 relative"
+                    key={index}
+                  >
+                    <img className="bg-blue-50" src={item.user_id.image} alt="" />
+                    <span className="absolute top-2 left-2 bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-1 rounded-full">
+                      {item.specialization_id ? item.specialization_id.name : "Chưa có chuyên khoa"}
+                    </span>
+                    <div className="p-4">
+                      {item.available === true ? (
+                        <div className="flex items-center gap-2 text-sm text-center text-[#00759c]">
+                          <p className="w-2 h-2 bg-[#00759c] rounded-full"></p>
+                          <p>Lịch hẹn</p>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-center text-[#9c0000]">
+                          <p className="w-2 h-2 bg-[#9c0000] rounded-full"></p>
+                          <p>Lịch hẹn</p>
+                        </div>
+                      )}
+                      <p className="text-gray-900 text-lg font-medium">{item.user_id.name}</p>
+                      <p className="text-gray-900 text-sm truncate">Giá: {item.price ? formatPrice(item.price) : "0"} VND</p>
+                      <p className="text-gray-900 text-sm truncate">{item.description}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+                {noDoctorsFound && (speciality || selectedDate) && (
+                  <div className="col-span-1 md:col-span-4 flex justify-center items-center w-full mt-4">
+                    <div className="bg-gray p-4 rounded-lg mt-32">
+                      <div className="text-red-500 text-center font-semibold">
+                        Không tìm thấy bác sĩ nào phù hợp với tiêu chí lọc của bạn.
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           {totalPages > 1 && renderPagination()}

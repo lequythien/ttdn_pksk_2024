@@ -1,7 +1,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Calendar, Clock, User } from "lucide-react";
+import { Calendar, Clock, User } from "lucide-react";
 import React, { memo, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
@@ -57,20 +57,16 @@ const MedicalRecordCard = memo(({ record }) => {
           <Badge className={`${getStatusColor(record.history.status)} px-3 py-1 rounded-full text-sm font-medium mt-2`}>
             Trạng thái: {getStatusText(record.history.status)}
           </Badge>
-          <div className="flex items-center mt-2 space-x-4">
-            <div className="flex items-center">
+          <div className="flex items-center mt-2 space-x-4 border-t">
+            <div className="flex items-center mt-2">
               <Calendar className="w-5 h-5 text-gray-500 mr-2" />
               <span>{new Date(record.history.work_date).toLocaleDateString("vi-VN")}</span>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center mt-2">
               <Clock className="w-5 h-5 text-gray-500 mr-2" />
               <span>{record.history.work_shift === "morning" ? "Buổi sáng" : "Buổi chiều"}</span>
             </div>
           </div>
-        </div>
-
-        <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500 text-center">
-          Ngày xác nhận: {new Date(record.history.createdAt).toLocaleDateString("vi-VN")}
         </div>
       </CardContent>
     </Card>
@@ -123,7 +119,8 @@ const MedicalHistory = () => {
     }
 
     try {
-      const response = await fetch(`${VITE_BACKEND_URI}/medical-history/${user.id}`, {
+      const userId = user._id ? user._id : user.id;
+      const response = await fetch(`${VITE_BACKEND_URI}/medical-history/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -122,7 +122,6 @@ const AllSchedule = () => {
 
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu:", error);
-        toast.error("Có lỗi xảy ra khi tải lịch làm việc.");
       }
       setLoading(false);
     };

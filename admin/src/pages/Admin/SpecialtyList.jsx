@@ -246,7 +246,6 @@ const SpecialtyList = () => {
               </tr>
             ) : currentSpecialties.length > 0 ? (
               currentSpecialties.map((specialty, index) => (
-                console.log(specialty),
                 <tr key={specialty._id} className="hover:bg-gray-50">
                   <td className="py-2 px-4 border-b text-sm font-semibold">
                     {index + 1}

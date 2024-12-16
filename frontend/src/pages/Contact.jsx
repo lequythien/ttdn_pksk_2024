@@ -114,7 +114,7 @@ const Contact = () => {
               <img className="h-5 w-5" src={assets.Clock} alt="Clock" />
               <p>
                 Ca sáng: 07:30 - 11:30 <br />
-                Ca Chiều: 11:00 - 17:30
+                Ca Chiều: 13:30 - 17:30
               </p>
             </div>
           </div>

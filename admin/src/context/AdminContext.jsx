@@ -31,10 +31,10 @@ const AdminContextProvider = ({ children }) => {
         toast.error(data.message);
         setDoctors(data.doctors);
       } else {
-        toast.error(data.message);
+        console.log(data.message);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
+      console.error("Error fetching doctors:", error);
     }
   };
 
@@ -44,10 +44,10 @@ const AdminContextProvider = ({ children }) => {
       if (data.success) {
         setSpecs(data.specializations);
       } else {
-        toast.error(data.message);
+        console.log(data.message);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
+      console.error("Error fetching specialists:", error);
     }
   };
 
@@ -75,11 +75,10 @@ const AdminContextProvider = ({ children }) => {
       if (data.success) {
         setCountAppointments(data.data);
       } else {
-        toast.error(data.message);
+        console.log(data.message);
       }
     } catch (error) {
       console.error("Error fetching appointments:", error);
-      toast.error(error.response?.data?.message || error.message);
     }
   };
   const getAllAppointments = async () => {
@@ -101,11 +100,10 @@ const AdminContextProvider = ({ children }) => {
       if (data.success) {
         setPatients(data.data);
       } else {
-        toast.error(data.message);
+        console.log(data.message);
       }
     } catch (error) {
       console.error("Error fetching patients:", error);
-      toast.error(error.response?.data?.message || error.message);
     }
   };
   const countPatients = async () => {
@@ -114,11 +112,10 @@ const AdminContextProvider = ({ children }) => {
       if (data.success) {
         setCountPatients(data.data);
       } else {
-        toast.error(data.message);
+        console.log(data.message);
       }
     } catch (error) {
       console.error("Error fetching patients:", error);
-      toast.error(error.response?.data?.message || error.message);
     }
   };
 
@@ -144,11 +141,10 @@ const AdminContextProvider = ({ children }) => {
       if (data.success) {
         setDashData(data.doctors);
       } else {
-        toast.error(data.message);
+        console.log(data.message);
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
-      toast.error(error.response?.data?.message || error.message);
     }
   };
   const getUpcomingApointmentsDashData = async () => {

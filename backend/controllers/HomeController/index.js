@@ -229,6 +229,33 @@ const getHistoryAppointment = async (req, res) => {
   }
 };
 
+// const getdataMoneyDashboardAdmin = async (req, res) => {
+//   try {
+//     const payments = await Payment.find({}).populate("appointment_id");
+//     if (!payments) {
+//       return res.status(404).json({ message: "Payment not found" });
+//     }
+
+//     // Nhóm theo tháng và tính tổng số tiền
+//     const revenueByMonth = payments.reduce((acc, payment) => {
+//       const workDate = payment.appointment_id.work_date;
+//       const month = new Date(workDate).toLocaleString("default", {
+//         month: "long",
+//       }); // Lấy tên tháng
+//       acc[month] = (acc[month] || 0) + payment.amount; // Cộng dồn số tiền
+//       return acc;
+//     }, {});
+
+//     // Chuyển đổi kết quả thành mảng
+//     const revenueData = Object.entries(revenueByMonth).map(
+//       ([month, revenue]) => ({ month, revenue })
+//     );
+
+//     return res.status(200).json(revenueData);
+//   } catch (error) {
+//     return res.status(500).json({ message: error.message });
+//   }
+// };
 const getdataMoneyDashboardAdmin = async (req, res) => {
   try {
     const payments = await Payment.find({}).populate("appointment_id");
@@ -238,11 +265,14 @@ const getdataMoneyDashboardAdmin = async (req, res) => {
 
     // Nhóm theo tháng và tính tổng số tiền
     const revenueByMonth = payments.reduce((acc, payment) => {
-      const workDate = payment.appointment_id.work_date;
-      const month = new Date(workDate).toLocaleString("default", {
-        month: "long",
-      }); // Lấy tên tháng
-      acc[month] = (acc[month] || 0) + payment.amount; // Cộng dồn số tiền
+      // Kiểm tra xem appointment_id có tồn tại không
+      if (payment.appointment_id) {
+        const workDate = payment.appointment_id.work_date;
+        const month = new Date(workDate).toLocaleString("default", {
+          month: "long",
+        }); // Lấy tên tháng
+        acc[month] = (acc[month] || 0) + payment.amount; // Cộng dồn số tiền
+      }
       return acc;
     }, {});
 
@@ -256,6 +286,7 @@ const getdataMoneyDashboardAdmin = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
 
 const getAllScheduleDoctor = async (req, res) => {
   try {

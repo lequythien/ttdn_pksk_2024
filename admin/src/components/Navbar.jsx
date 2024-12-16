@@ -175,7 +175,7 @@ const Navbar = () => {
             <BellIcon className="w-6 h-6 text-gray-600" />
             {unreadNotifications > 0 && (
               <span
-                className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center"
+                className="absolute bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center -top-1 -right-1"
                 role="button"
                 aria-label="Xem thông báo chưa đọc"
               >

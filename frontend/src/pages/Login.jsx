@@ -177,6 +177,7 @@ const Login = () => {
               onChange={(e) => setEmail(e.target.value)}
               value={email}
               required
+              disabled={loading} // Thêm dòng này
             />
           </div>
 
@@ -188,6 +189,7 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               value={password}
               required
+              disabled={loading} // Thêm dòng này
             />
             {password && (
               <button

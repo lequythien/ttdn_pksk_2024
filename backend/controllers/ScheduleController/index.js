@@ -125,28 +125,6 @@ const deleteSchedule = async (req, res) => {
   }
 };
 
-// const getScheduleByDoctor = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const today = new Date();
-//     today.setHours(0, 0, 0, 0);
-//     const doctor = await Doctor.findOne({ _id: id });
-//     if (!doctor) {
-//       return res.status(400).json({ message: "Doctor not found" });
-//     }
-//     const schedules = await Schedule.find({
-//       doctor_id: doctor._id,
-//       work_date: { $gte: today },
-//     }).sort({ work_date: 1 });
-//     if (schedules.length <= 0) {
-//       return res.status(400).json({ message: "Schedule not found" });
-//     }
-//     return res.status(200).json(schedules);
-//   } catch (error) {
-//     return res.status(500).json({ message: error.message });
-//   }
-// };
-
 const getScheduleByDoctor = async (req, res) => {
   try {
     const { id } = req.params;
@@ -183,15 +161,15 @@ const getScheduleByDoctor = async (req, res) => {
 const getScheduleByDoctorDashboard = async (req, res) => {
   try {
     const { id } = req.params;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // const today = new Date();
+    // today.setHours(0, 0, 0, 0);
     const doctor = await Doctor.findOne({ user_id: id });
     if (!doctor) {
       return res.status(400).json({ message: "Doctor not found" });
     }
     const schedules = await Schedule.find({
       doctor_id: doctor._id,
-      work_date: { $gte: today },
+      // work_date: { $gte: today },
     }).sort({ work_date: 1 });
     if (schedules.length <= 0) {
       return res.status(400).json({ message: "Schedule not found" });
@@ -202,37 +180,6 @@ const getScheduleByDoctorDashboard = async (req, res) => {
   }
 };
 
-// const doctorCreateSchedule = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { work_shift } = req.body;
-
-//     const doctor = await Doctor.findOne({ user_id: id });
-//     if (!doctor) {
-//       return res.status(400).json({ message: "Doctor not found" });
-//     }
-//     const checkSchedule = await Schedule.findOne({
-//       work_date: req.body.work_date,
-//       work_shift: req.body.work_shift,
-//       doctor_id: doctor._id,
-//     });
-//     if (checkSchedule) {
-//       return res.status(400).json({ message: "Schedule already exists" });
-//     }
-//     const schedule = await Schedule.create({
-//       ...req.body,
-//       doctor_id: doctor._id,
-//     });
-//     if (schedule) {
-//       return res.status(200).json({ success: true, schedule });
-//     }
-//     return res
-//       .status(400)
-//       .json({ success: false, message: "Schedule not found" });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: error.message });
-//   }
-// };
 const doctorCreateSchedule = async (req, res) => {
   try {
     const { id } = req.params;
